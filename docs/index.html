@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff">
+<title>AutoMinds Africa | Attendance OS</title><link rel="icon" href="assets/logo.jpeg"><link rel="stylesheet" href="styles.css"></head>
+<body><div class="app">
+<aside id="sidebar" class="sidebar">
+<div class="brand"><img src="assets/logo.jpeg" alt="AutoMinds Africa logo"><div><strong>AutoMinds Africa</strong><small>ATTENDANCE OS</small></div><button id="collapse" class="icon-btn" title="Collapse sidebar">☰</button></div>
+<div class="sidebar-scroll">
+<div class="sidebar-label">WORKSPACE</div>
+<nav id="navigation">
+<button class="nav-link active" data-page="overview"><span class="nav-ico">▦</span><span class="nav-label">Overview</span></button>
+<button class="nav-link" data-page="attendance"><span class="nav-ico">◷</span><span class="nav-label">Attendance</span></button>
+<button class="nav-link" data-page="employees"><span class="nav-ico">♙</span><span class="nav-label">Employees</span></button>
+<button class="nav-link" data-page="branches"><span class="nav-ico">⌂</span><span class="nav-label">Branches</span></button>
+<button class="nav-link" data-page="devices"><span class="nav-ico">▣</span><span class="nav-label">Biometric Devices</span></button>
+<div class="sidebar-label tools-label">TOOLS</div>
+<button class="nav-link" data-page="reports"><span class="nav-ico">▤</span><span class="nav-label">Reports & Exports</span></button>
+<button class="nav-link" data-page="simulator"><span class="nav-ico">◎</span><span class="nav-label">Demo Terminal</span></button>
+<button class="nav-link" data-page="settings"><span class="nav-ico">⚙</span><span class="nav-label">Settings</span></button>
+</nav></div>
+<div class="sidebar-bottom"><div class="mode"><span class="status-dot"></span><div><b>Demo workspace</b><small>Simulation · browser storage</small></div></div><div class="profile"><div class="avatar">AM</div><div class="profile-name"><b>AutoMinds Admin</b><small>Demonstration account</small></div><span>⌄</span></div></div></aside>
+<div class="workspace"><header class="topbar"><button id="mobile-menu" class="icon-btn" aria-label="Toggle menu">☰</button><div class="crumb"><span>Workspace</span><b>/</b><strong id="crumb">Overview</strong></div><div class="top-right"><span class="topbadge">● &nbsp; Demo environment</span><button id="global-export" class="icon-btn" title="Export attendance CSV">⇩</button><span class="header-avatar">AM</span></div></header><main class="main">
+<div class="page-heading"><div><div class="overline">AUTOMINDS AFRICA / WORKFORCE OPERATIONS</div><h1 id="heading">Good afternoon, Administrator</h1><p id="subtitle">Here's what is happening across your branches today.</p></div><div class="heading-actions"><span id="today" class="date-pill"></span><button id="primary-action" class="primary-button">＋ Simulate scan</button></div></div>
+<div class="demo-notice"><span>ⓘ</span><div><b>Interactive prototype</b> — Employees, branches, devices and check-ins shown here are fictional examples. Scans are simulated, saved only in this browser and are not connected to ZKTeco hardware. This public demo does not store employee biometrics.</div><button id="dismiss-notice" aria-label="Dismiss notice">×</button></div>
+<div id="page" class="page-body"></div>
+<footer>AutoMinds Africa · Attendance OS <span>Demo environment · Not for actual payroll or employment decisions</span></footer>
+</main></div></div>
+<div id="modal-root" class="modal-root" hidden></div><div id="toast" class="toast" role="status" hidden></div>
+<script src="app.js"></script></body></html>
