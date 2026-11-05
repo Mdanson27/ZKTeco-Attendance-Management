@@ -27,7 +27,7 @@ function tag(s){return '<span class="tag '+(s==='OUT'?'out':s==='NONE'?'gray':''
 function initial(name){return name.split(' ').slice(0,2).map(s=>s[0]).join('').toUpperCase()}
 function notify(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.hidden=true,3300)}
 function mark(type){return type==='IN'?'Check-in':'Check-out'}
-function scan(id){const p=employee(Number(id));if(!p){notify('Select an employee');return}const prev=latest().get(p.id);const type=prev?.type==='IN'?'OUT':'IN';const record={id:Date.now()+Math.floor(Math.random()*1000),employeeId:p.id,branch:p.branch,type,at:new Date().toISOString(),source:'SIMULATED'};events.push(record);persist();notify(p.name+' · '+mark(type)+' recorded');render();return record}
+function scan(id){const p=employee(Number(id));if(!p){notify('Select an employee');return}const prev=latest().get(p.id);const type=prev?.type==='IN'?'OUT':'IN';const record={id:Date.now()+Math.floor(Math.random()*1000),employeeId:p.id,branch:p.branch,type,at:new Date().toISOString(),source:'SIMULATED'};events.push(record);persist();notify(p.name+' · '+mark(type)+' recorded');if(page!=='simulator')render();return record}
 function csv(rows,filename){const text=rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob([text],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function exportAttendance(){csv([['Event ID','Employee ID','Employee','Branch','Event','Timestamp (ISO)','Source'],...events.map(e=>[e.id,e.employeeId,employee(e.employeeId)?.name,e.branch,mark(e.type),e.at,e.source])],'autominds-attendance-demo-'+day()+'.csv');notify('Demo CSV exported')}
 function section(title,subtitle,action){return '<div class="section-head"><div><h2>'+title+'</h2><p>'+subtitle+'</p></div>'+(action||'')+'</div>'}
@@ -47,14 +47,89 @@ function branchPage(){return section('Company branches','Demo locations used to 
 function devicePage(){return section('Registered device examples','Illustrative F18 terminals — no physical machines have been registered','<span class="pill warn">0 connected hardware devices</span>')+'<div class="device-grid">'+devices.map(d=>'<div class="device-card"><div class="row-between"><span class="circle">▣</span><span class="pill warn">Offline / Demo</span></div><h3 style="margin:17px 0 5px">'+safe(d.model)+'</h3><p class="muted">'+safe(d.id)+'</p><div class="setting-row"><span class="muted">Branch</span><strong>'+safe(d.branch)+'</strong></div><div class="setting-row"><span class="muted">Firmware</span><strong>'+safe(d.firmware)+'</strong></div><div class="setting-row"><span class="muted">Sync method</span><strong>Pending verification</strong></div></div>').join('')+'</div>'+section('Real-device onboarding','Technical tasks needed to support genuine scanner transactions')+'<div class="panel steps"><div class="step"><h3>Confirm hardware and authorization</h3><p>Capture model, firmware and network settings from one authorized F18 machine.</p></div><div class="step"><h3>Select connection approach</h3><p>Verify TA Push, ADMS or SDK support before selecting the ingestion method.</p></div><div class="step"><h3>Configure a private authenticated backend</h3><p>Use HTTPS, scoped device credentials, deduplication and offline recovery.</p></div><div class="step"><h3>Run a witnessed scan</h3><p>Verify actual attendance records are recorded once with correct local timestamps.</p></div></div>'}
 function reports(){const s=stats();return '<div class="metric-grid">'+metric('Sample employees',s.total,'Available in demo','♙')+metric('Attendance events',events.length,'Saved in this browser','▤')+metric('Today’s check-ins',todayEvents().filter(e=>e.type==='IN').length,'Simulation only','✓')+metric('Sample branches',branches.length,'Multi-location example','⌂')+'</div>'+section('Available exports','Download data directly from this browser')+'<div class="stack"><div class="info-card"><div><b>Complete attendance event log</b><p>Employee, location, event type, timestamp, simulation source</p></div><button class="outline-button" data-export="attendance">⇩ CSV</button></div><div class="info-card"><div><b>Employee directory</b><p>Sample staff names, IDs, departments, branches and shifts</p></div><button class="outline-button" data-export="employees">⇩ CSV</button></div><div class="info-card"><div><b>Branch summary</b><p>Illustrative staff count, present count and attendance percentage</p></div><button class="outline-button" data-export="branches">⇩ CSV</button></div></div>'+section('Data handling','Important safeguards for a public demonstration')+'<div class="feature-banner"><div><h3>Browser-only demo dataset</h3><p>Generated scan events are stored in your browser’s localStorage. GitHub Pages does not host a live database or Python API. Refreshing retains records on this browser; another device sees its own independent demo.</p></div><span class="pill gray">No live scanner feed</span></div>'}
 function settings(){return '<div class="settings-grid"><div class="panel"><div class="panel-header"><div><h2>Workspace identity</h2><p>Public demo configuration</p></div></div><div class="setting-row"><div><strong>Organization</strong><small>Displayed throughout the application</small></div><strong>AutoMinds Africa</strong></div><div class="setting-row"><div><strong>Application</strong><small>Prototype name</small></div><strong>Attendance OS</strong></div><div class="setting-row"><div><strong>Environment</strong><small>Public static preview</small></div><span class="pill warn">Demo only</span></div><div class="setting-row"><div><strong>Storage</strong><small>Independent for each browser</small></div><strong>localStorage</strong></div></div><div class="panel"><div class="panel-header"><div><h2>Attendance policy</h2><p>Current demonstration assumptions</p></div></div><div class="setting-row"><div><strong>Scheduled check-in</strong><small>Illustrative local start time</small></div><strong>08:00</strong></div><div class="setting-row"><div><strong>Late threshold</strong><small>Applied to demo check-in events</small></div><strong>08:10</strong></div><div class="setting-row"><div><strong>Check-out</strong><small>Alternates with check-in on each scan</small></div><strong>Automatic</strong></div><div class="setting-row"><div><strong>Physical devices</strong><small>No device credentials stored in site</small></div><span class="pill warn">Not configured</span></div></div></div>'+section('Demo controls','Reset simulated events on this browser only')+'<div class="feature-banner"><div><h3>Clear demonstration attendance history</h3><p>This permanently deletes only the simulated events held in this browser. It will not affect the GitHub repository or any physical device.</p></div><button id="reset-events" class="outline-button">Reset demo events</button></div>'}
-function simulatorPage(){return '<div class="two-col">'+simulator(true)+'<div class="panel"><div class="panel-header"><div><h2>Current employee status</h2><p>Based on the latest simulated scan today</p></div><span class="pill gray">LOCAL</span></div><div class="stack">'+people.map(p=>'<div class="info-card"><div class="user-cell"><span class="circle">'+initial(p.name)+'</span><div><b>'+safe(p.name)+'</b><p>'+safe(p.branch)+'</p></div></div>'+tag(latest().get(p.id)?.type||'NONE')+'</div>').join('')+'</div></div></div>'+section('Integration pathway','How a real F18 will eventually update this dashboard')+'<div class="feature-banner"><div><h3>Physical F18 → secure server → attendance API → web UI</h3><p>GitHub Pages provides the interface only; real-time cross-branch attendance requires a separate authenticated backend, database and event delivery system.</p></div><button class="outline-button" data-go="devices">View device readiness →</button></div>'}
+function simulatorPage(){
+const selected=employee(selectedScanPerson)||people[0],statuses=latest();
+const cards=people.map(p=>'<button type="button" class="scan-person '+(p.id===selected.id?'chosen':'')+'" data-scan-person="'+p.id+'" aria-pressed="'+(p.id===selected.id)+'"><span class="circle">'+initial(p.name)+'</span><span class="person-meta"><b>'+safe(p.name)+'</b><small>'+safe(p.branch)+'</small></span><span class="scan-person-status">'+tag(statuses.get(p.id)?.type||'NONE')+'</span></button>').join('');
+return '<div class="scan-workbench">'+
+'<section class="panel scanner-workspace">'+
+'<div class="panel-header"><div><h2>Interactive biometric terminal</h2><p>Visual simulation · F18 fingerprint verification</p></div><span class="pill warn">DEMO MODE</span></div>'+
+'<div class="device-console" id="device-console" aria-label="Animated fingerprint scanner">'+
+'<div class="device-console-top"><span><i class="device-led"></i> F18 TERMINAL / SIM-01</span><span id="device-mode">READY TO SCAN</span></div>'+
+'<div class="fingerprint-stage"><div class="fingerprint-halo"><svg class="fingerprint-svg" viewBox="0 0 120 135" role="img" aria-label="Fingerprint graphic" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">'+
+'<path d="M18 55C18 30 36 15 60 15c24 0 42 17 42 41v22M28 78V56c0-21 14-31 32-31 19 0 33 13 33 32v28M38 96V57c0-14 9-23 22-23s23 10 23 23v36M48 112V58c0-8 5-14 12-14s13 6 13 14v50M58 119V59m15 61c-2-13-3-26-3-39M28 96c2 12 7 22 12 29M92 99c-1 10-4 17-8 25M19 83c0 18 4 31 12 43"/>'+
+'</svg><span class="fingerprint-beam"></span><span class="fingerprint-center">✓</span></div></div>'+
+'<div class="scanner-result"><div id="scan-state-label">Awaiting fingerprint</div><strong id="scan-result">Select an employee and start verification</strong><small id="scan-result-detail">No biometric information is processed or stored.</small></div>'+
+'</div>'+
+'<div class="scan-controls"><div class="scan-selected"><span class="circle" id="selected-avatar">'+initial(selected.name)+'</span><span><small>SELECTED EMPLOYEE</small><strong id="selected-employee-name">'+safe(selected.name)+'</strong><small id="selected-employee-branch">'+safe(selected.branch)+'</small></span></div><button class="primary-button" id="scan-button" type="button">◎ &nbsp; Start fingerprint scan</button></div>'+
+'<div class="scanner-explainer"><span>↻</span><p>Each completed simulation records a check-in or check-out for the selected employee. The selection remains unchanged for repeated scans.</p></div>'+
+'</section>'+
+'<section class="panel scanner-directory"><div class="panel-header"><div><h2>Employees & live status</h2><p>Choose a person to scan · '+people.length+' demo employees</p></div><span class="pill gray">LOCAL DEMO</span></div>'+
+'<div class="scanner-directory-header"><span>SELECT EMPLOYEE</span><span id="scan-directory-count">'+stats().present+' checked in</span></div>'+
+'<div class="scan-people-grid" id="scan-people-grid">'+cards+'</div>'+
+'<div class="scanner-legend"><span><i class="legend-dot green"></i> Checked in</span><span><i class="legend-dot amber"></i> Checked out</span><span><i class="legend-dot gray"></i> Not checked in</span></div>'+
+'</section></div>'+
+'<div class="scanner-bottom"><div class="scanner-note"><span class="pill warn">Hardware pending</span><div><b>Physical F18 integration</b><p>The animation simulates verification. Real device attendance requires authenticated backend ingestion and a centralized database.</p></div><button class="outline-button" data-go="devices">Integration details →</button></div>'+
+'<div class="scanner-last-events"><div class="row-between"><h2>Recent simulated scans</h2><button class="linkbutton" data-go="attendance">Open attendance log →</button></div><div id="recent-scan-list">'+recentScanRows()+'</div></div></div>';
+}
+function recentScanRows(){
+const list=todayEvents().slice(0,4);
+return list.length?list.map(e=>'<div class="scan-recent-row"><span class="circle">'+initial(employee(e.employeeId)?.name||'NA')+'</span><span><b>'+safe(employee(e.employeeId)?.name||'Unknown')+'</b><small>'+safe(e.branch)+' · '+time(e.at)+'</small></span>'+tag(e.type)+'</div>').join(''):'<div class="scan-recent-empty">Your simulated scan history will appear here.</div>';
+}
+let selectedScanPerson=101,visualScanBusy=false;
+function chooseScanPerson(id){
+const p=employee(Number(id));if(!p||visualScanBusy)return;
+selectedScanPerson=p.id;
+document.querySelectorAll('[data-scan-person]').forEach(card=>{
+const chosen=Number(card.dataset.scanPerson)===selectedScanPerson;
+card.classList.toggle('chosen',chosen);card.setAttribute('aria-pressed',String(chosen));
+});
+const n=$('selected-employee-name');if(!n)return;
+n.textContent=p.name;
+$('selected-avatar').textContent=initial(p.name);
+$('selected-employee-branch').textContent=p.branch;
+}
+function updateScannerStatuses(){
+const s=latest();
+document.querySelectorAll('[data-scan-person]').forEach(card=>{
+const p=employee(Number(card.dataset.scanPerson));
+if(p)card.querySelector('.scan-person-status').innerHTML=tag(s.get(p.id)?.type||'NONE');
+});
+if($('scan-directory-count'))$('scan-directory-count').textContent=stats().present+' checked in';
+if($('recent-scan-list'))$('recent-scan-list').innerHTML=recentScanRows();
+}
+function runVisualScan(){
+if(visualScanBusy)return;
+const p=employee(selectedScanPerson);if(!p)return;
+visualScanBusy=true;
+const btn=$('scan-button'),device=$('device-console');
+if(!btn||!device){visualScanBusy=false;return}
+btn.disabled=true;btn.textContent='Verifying fingerprint…';
+device.classList.remove('scan-success');device.classList.add('is-scanning');
+$('device-mode').textContent='VERIFYING';
+$('scan-state-label').textContent='Fingerprint verification';
+$('scan-result').textContent='Scanning '+p.name+'…';
+$('scan-result-detail').textContent='Reading virtual fingerprint · simulation only';
+setTimeout(()=>{
+try{
+const result=scan(p.id);
+device.classList.remove('is-scanning');device.classList.add('scan-success');
+$('device-mode').textContent='VERIFIED';
+$('scan-state-label').textContent='Identity confirmed';
+$('scan-result').textContent=p.name+' · '+(result.type==='IN'?'Checked in':'Checked out');
+$('scan-result-detail').textContent=time(result.at)+' · '+p.branch+' · Simulated event recorded';
+updateScannerStatuses();
+}catch(err){device.classList.remove('is-scanning');$('device-mode').textContent='ERROR';$('scan-result').textContent='Scan could not be completed';}
+finally{btn.disabled=false;btn.textContent='◎  Scan selected employee again';visualScanBusy=false}
+},1250);
+}
+
 function render(){const t=titles[page];$('crumb').textContent=t[0];$('heading').textContent=t[1];$('subtitle').textContent=t[2];$('primary-action').textContent=page==='reports'?'⇩ Export attendance':page==='settings'?'◎ Open simulator':'＋ Simulate scan';$('today').textContent=new Date().toLocaleDateString('en-UG',{day:'numeric',month:'short',year:'numeric'});document.querySelectorAll('.nav-link').forEach(b=>b.classList.toggle('active',b.dataset.page===page));const views={overview,attendance,employees,branches:branchPage,devices:devicePage,reports,simulator:simulatorPage,settings};$('page').innerHTML=views[page]();if(page==='employees')bindPeopleFilters();if(page==='attendance')bindAttendanceFilters();window.scrollTo({top:0,behavior:'instant'})}
 function bindAttendanceFilters(){const s=$('filter-search'),b=$('filter-branch'),t=$('filter-type');if(!s)return;function update(){filters={search:s.value,branch:b.value,type:t.value};$('attendance-table').innerHTML=activityTable(100)}s.addEventListener('input',update);b.addEventListener('change',update);t.addEventListener('change',update)}
 function bindPeopleFilters(){const search=$('people-search'),branch=$('people-branch');function update(){let count=0;document.querySelectorAll('[data-person]').forEach(r=>{const match=r.dataset.person.includes(search.value.toLowerCase())&&(!branch.value||r.dataset.branch===branch.value);r.hidden=!match;if(match)count++});$('people-count').textContent=count+' employees shown'}search.addEventListener('input',update);branch.addEventListener('change',update)}
 function navigate(next){if(!titles[next])return;page=next;filters={search:'',branch:'',type:''};history.replaceState(null,'','#'+next);$('sidebar').classList.remove('mobile-open');render()}
 function exportData(which){if(which==='attendance')return exportAttendance();if(which==='employees'){csv([['ID','Name','Branch','Department','Role','Shift'],...people.map(p=>[p.id,p.name,p.branch,p.department,p.role,p.shift])],'autominds-demo-employees.csv')}else if(which==='branches'){const s=latest();csv([['Branch','Total employees','Present','Absent'],...branches.map(b=>{const ps=people.filter(p=>p.branch===b),present=ps.filter(p=>s.get(p.id)?.type==='IN').length;return[b,ps.length,present,ps.length-present]})],'autominds-demo-branches.csv')}notify('Demo CSV exported')}
 function confirmReset(){const m=$('modal-root');m.hidden=false;m.innerHTML='<div class="modal" role="dialog" aria-modal="true"><h2>Reset simulated attendance?</h2><p>This removes all sample scan events saved in this browser. Employee examples remain unchanged.</p><div class="modal-actions"><button class="outline-button" id="cancel-reset">Cancel</button><button class="primary-button" id="confirm-reset">Clear demo events</button></div></div>';$('cancel-reset').onclick=()=>m.hidden=true;$('confirm-reset').onclick=()=>{events=[];persist();m.hidden=true;render();notify('Demo attendance history cleared')}}
-document.addEventListener('click',e=>{const go=e.target.closest('[data-go]');if(go){navigate(go.dataset.go);return}const nav=e.target.closest('[data-page]');if(nav){navigate(nav.dataset.page);return}const exp=e.target.closest('[data-export]');if(exp){exportData(exp.dataset.export);return}if(e.target.closest('#scan-button')){const result=scan($('scan-employee').value);const label=$('scan-result');if(label&&result)label.textContent='✓ '+employee(result.employeeId).name+' · '+mark(result.type)+' recorded';return}if(e.target.closest('#reset-events'))confirmReset()});
+document.addEventListener('click',e=>{const go=e.target.closest('[data-go]');if(go){navigate(go.dataset.go);return}const nav=e.target.closest('[data-page]');if(nav){navigate(nav.dataset.page);return}const exp=e.target.closest('[data-export]');if(exp){exportData(exp.dataset.export);return}const person=e.target.closest('[data-scan-person]');if(person){chooseScanPerson(person.dataset.scanPerson);return}if(e.target.closest('#scan-button')&&page==='simulator'){runVisualScan();return}if(e.target.closest('#scan-button')){const result=scan($('scan-employee').value);const label=$('scan-result');if(label&&result)label.textContent='✓ '+employee(result.employeeId).name+' · '+mark(result.type)+' recorded';return}if(e.target.closest('#reset-events'))confirmReset()});
 $('primary-action').onclick=()=>page==='reports'?exportAttendance():navigate('simulator');$('global-export').onclick=exportAttendance;
 $('collapse').onclick=()=>{$('sidebar').classList.toggle('collapsed')};$('mobile-menu').onclick=()=>{$('sidebar').classList.toggle('mobile-open')};
 $('dismiss-notice').onclick=()=>{$('demo-notice')};document.getElementById('dismiss-notice').onclick=()=>{document.querySelector('.demo-notice').hidden=true};
