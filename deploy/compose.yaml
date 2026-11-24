@@ -1,0 +1,24 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    env_file: .env
+    environment:
+      ADMS_ENABLE_LIVE: "false"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "127.0.0.1:8765:8000"
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
