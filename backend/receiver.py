@@ -114,3 +114,7 @@ async def acknowledge(request: Request):
 
 from .dashboard import router as dashboard_router
 app.include_router(dashboard_router)
+
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+app.mount("/workspace", StaticFiles(directory=Path(__file__).parent/"workspace",html=True),name="workspace")
