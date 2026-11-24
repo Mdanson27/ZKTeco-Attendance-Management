@@ -1,0 +1,28 @@
+name: Attendance backend checks
+on:
+  push:
+    paths: ['backend/**', 'deploy/**', '.dockerignore', '.github/workflows/backend-ci.yml']
+  pull_request:
+    paths: ['backend/**', 'deploy/**', '.dockerignore', '.github/workflows/backend-ci.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r backend/requirements.txt
+      - run: python -m compileall -q backend
+      - run: python -m pytest -q backend
+      - run: docker build -f deploy/Dockerfile -t attendance-ci .
+      - name: Local health smoke test
+        run: |
+          docker run -d --name attendance-ci -p 127.0.0.1:18765:8000 attendance-ci
+          trap 'docker rm -f attendance-ci >/dev/null 2>&1 || true' EXIT
+          curl --retry 15 --retry-connrefused --retry-delay 2 --fail http://127.0.0.1:18765/api/health
+          curl --fail http://127.0.0.1:18765/workspace/
