@@ -111,3 +111,6 @@ async def acknowledge(request: Request):
     await bounded_body(request)
     # No commands are issued or acted upon in this experimental receiver.
     return await handle(request,"command_ack")
+
+from .dashboard import router as dashboard_router
+app.include_router(dashboard_router)
